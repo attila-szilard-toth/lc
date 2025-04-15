@@ -1,0 +1,1964 @@
+1249. Minimum Remove to Make Valid Parentheses
+
+
+Given a string s of '(' , ')' and lowercase English characters.
+
+Your task is to remove the minimum number of parentheses ( '(' or ')', in any positions ) so that the resulting parentheses string is valid and return any valid string.
+
+Formally, a parentheses string is valid if and only if:
+
+It is the empty string, contains only lowercase characters, or
+It can be written as AB (A concatenated with B), where A and B are valid strings, or
+It can be written as (A), where A is a valid string.
+
+
+class Solution:
+    def minRemoveToMakeValid(self, s: str) -> str:
+        stack = deque()
+        remove = set()
+
+        for i, c in enumerate(s):
+            if c == "(":
+                stack.append(i)
+            elif c == ")":
+                if not stack:
+                    remove.add(i)
+                else:
+                    stack.pop()
+        
+        remove.update(stack)
+        
+        return "".join([c for i, c in enumerate(s) if i not in remove])
+
+
+---------------------------------------------------------------------------------------------------->
+
+408. Valid Word Abbreviation
+
+
+A string can be abbreviated by replacing any number of non-adjacent, non-empty substrings with their lengths. The lengths should not have leading zeros.
+
+For example, a string such as "substitution" could be abbreviated as (but not limited to):
+
+"s10n" ("s ubstitutio n")
+"sub4u4" ("sub stit u tion")
+"12" ("substitution")
+"su3i1u2on" ("su bst i t u ti on")
+"substitution" (no substrings replaced)
+The following are not valid abbreviations:
+
+"s55n" ("s ubsti tutio n", the replaced substrings are adjacent)
+"s010n" (has leading zeros)
+"s0ubstitution" (replaces an empty substring)
+Given a string word and an abbreviation abbr, return whether the string matches the given abbreviation.
+
+A substring is a contiguous non-empty sequence of characters within a string.
+
+
+class Solution:
+    def validWordAbbreviation(self, word: str, abbr: str) -> bool:
+        j, jump = 0, 0
+
+        for c in abbr:
+            if c.isdigit():
+                if jump == 0 and int(c) == 0:
+                    return False
+                else:
+                    jump = jump * 10 + int(c)
+            else:
+                if jump != 0:
+                    j += jump
+                    jump = 0
+
+                if j >= len(word) or c != word[j]:
+                    return False
+                j += 1
+        
+        j += jump    
+        return j == len(word)
+
+
+---------------------------------------------------------------------------------------------------->
+
+215. Kth Largest Element in an Array
+
+
+Given an integer array nums and an integer k, return the kth largest element in the array.
+
+Note that it is the kth largest element in the sorted order, not the kth distinct element.
+
+Can you solve it without sorting?
+
+
+class Solution:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        heap = []
+
+        for x in nums:
+            heapq.heappush(heap, x)
+            if len(heap) > k:
+                heapq.heappop(heap)
+
+        return heap[0]
+
+
+---------------------------------------------------------------------------------------------------->
+
+199. Binary Tree Right Side View
+
+
+Given the root of a binary tree, imagine yourself standing on the right side of it, return the values of the nodes you can see ordered from top to bottom.
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+
+class Solution:
+    def rightSideView(self, root: Optional[TreeNode]) -> List[int]:
+        result = []
+        if not root:
+            return result
+        
+        queue = deque()
+        queue.append((root, 0))
+
+        while queue:
+            node, level = queue.popleft()
+            if level == len(result):
+                result.append(node.val)
+            if node.right:
+                queue.append((node.right, level + 1))
+            if node.left:
+                queue.append((node.left, level + 1))
+        
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+680. Valid Palindrome II
+
+
+Given a string s, return true if the s can be palindrome after deleting at most one character from it.
+
+class Solution:
+    def isPalindrome(self, s: str, i: int, j: int) -> bool:
+        while i <= j:
+            if s[i] != s[j]:
+                return False
+            i += 1
+            j -= 1
+
+        return True
+
+    def validPalindrome(self, s: str) -> bool:
+        i, j = 0, len(s) - 1
+        while i <= j:
+            if s[i] != s[j]:
+                return self.isPalindrome(s, i, j - 1) or self.isPalindrome(s, i + 1, j)
+            i += 1
+            j -= 1
+
+        return True
+
+
+---------------------------------------------------------------------------------------------------->
+
+314. Binary Tree Vertical Order Traversal
+
+
+Given the root of a binary tree, return the vertical order traversal of its nodes' values. (i.e., from top to bottom, column by column).
+
+If two nodes are in the same row and column, the order should be from left to right.
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def verticalOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+        result = []
+        if not root:
+            return result
+
+        col_to_vals = defaultdict(list)
+        queue = deque()
+        queue.append((root, 0))
+        
+        while queue:
+            node, col = queue.popleft()
+            col_to_vals[col].append(node.val)
+
+            if node.left:
+                queue.append((node.left, col - 1))
+            if node.right:
+                queue.append((node.right, col + 1))
+
+        for key in sorted(col_to_vals.keys()):
+            result.append(col_to_vals[key])
+        
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+560. Subarray Sum Equals K
+
+
+Given an array of integers nums and an integer k, return the total number of subarrays whose sum equals to k.
+
+A subarray is a contiguous non-empty sequence of elements within an array.
+
+
+class Solution:
+    def subarraySum(self, nums: List[int], k: int) -> int:
+        result = 0
+        prefix_sum = 0
+        prefix_sum_to_counter = defaultdict(int)
+        prefix_sum_to_counter[0] += 1
+
+        for x in nums:
+            prefix_sum = prefix_sum + x
+            if prefix_sum - k in prefix_sum_to_counter:
+                result += prefix_sum_to_counter[prefix_sum - k]
+            prefix_sum_to_counter[prefix_sum] += 1
+        
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+543. Diameter of Binary Tree
+
+
+Given the root of a binary tree, return the length of the diameter of the tree.
+
+The diameter of a binary tree is the length of the longest path between any two nodes in a tree. This path may or may not pass through the root.
+
+The length of a path between two nodes is represented by the number of edges between them.
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    
+    def dsf(self, node: TreeNode) -> int:
+        if not node:
+            return 0
+        
+        left = self.dsf(node.left)
+        right = self.dsf(node.right)
+
+        self.diameter = max(self.diameter, (left + right))
+        return max(left, right) + 1
+
+    def diameterOfBinaryTree(self, root: Optional[TreeNode]) -> int:
+        self.diameter = 0
+        self.dsf(root)
+        return self.diameter
+
+
+---------------------------------------------------------------------------------------------------->
+
+1762. Buildings With an Ocean View
+
+
+There are n buildings in a line. You are given an integer array heights of size n that represents the heights of the buildings in the line.
+
+The ocean is to the right of the buildings. A building has an ocean view if the building can see the ocean without obstructions. Formally, a building has an ocean view if all the buildings to its right have a smaller height.
+
+Return a list of indices (0-indexed) of buildings that have an ocean view, sorted in increasing order.
+
+
+class Solution:
+    def findBuildings(self, heights: List[int]) -> List[int]:
+        max_height, indexes = 0, []
+        for i in range(len(heights) - 1, -1, -1):
+            if heights[i] > max_height:
+                indexes.append(i)
+                max_height = heights[i]
+        
+        indexes.reverse()
+        return indexes
+
+
+---------------------------------------------------------------------------------------------------->
+
+125. Valid Palindrome
+
+
+A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Alphanumeric characters include letters and numbers.
+
+Given a string s, return true if it is a palindrome, or false otherwise.
+
+
+class Solution:
+    def isPalindrome(self, s: str) -> bool:
+        i, j = 0, len(s) - 1
+        while i < j:
+            while i < j and not s[i].isalnum():
+                i += 1
+            while i < j and not s[j].isalnum():
+                j -= 1
+            if s[i].lower() != s[j].lower():
+                return False
+            i += 1
+            j -= 1
+        
+        return True
+
+
+---------------------------------------------------------------------------------------------------->
+
+227. Basic Calculator II
+
+
+Given a string s which represents an expression, evaluate this expression and return its value. 
+
+The integer division should truncate toward zero.
+
+You may assume that the given expression is always valid. All intermediate results will be in the range of [-231, 231 - 1].
+
+Note: You are not allowed to use any built-in function which evaluates strings as mathematical expressions, such as eval().
+
+
+class Solution:
+    def calculate(self, s: str) -> int:
+        stack, operator, value = deque(), "+", 0
+
+        for i, x in enumerate(s):
+            if x.isdigit():
+                value = value * 10 + int(x)
+
+            if x in "*/+-" or i == len(s) - 1:
+                if operator == "*":
+                    stack.append(stack.pop() * value)
+                elif operator == "/":
+                    stack.append(int(stack.pop() / value))
+                elif operator == "-":
+                    stack.append(-value)
+                elif operator == "+":
+                    stack.append(value)
+            
+                operator, value = x, 0
+
+        return sum(stack)
+
+
+---------------------------------------------------------------------------------------------------->
+
+50. Pow(x, n)
+
+
+Implement pow(x, n), which calculates x raised to the power n (i.e., xn).
+
+
+class Solution:
+    def myPow(self, x: float, n: int) -> float:
+        if n == 0:
+            return 1
+        if n < 0:
+            x, n = 1/x, -n
+
+        result = 1
+        while n:
+            if n % 2:
+                result *= x
+            x *= x
+            n //= 2
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+88. Merge Sorted Array
+
+
+You are given two integer arrays nums1 and nums2, sorted in non-decreasing order, and two integers m and n, representing the number of elements in nums1 and nums2 respectively.
+
+Merge nums1 and nums2 into a single array sorted in non-decreasing order.
+
+The final sorted array should not be returned by the function, but instead be stored inside the array nums1. To accommodate this, nums1 has a length of m + n, where the first m elements denote the elements that should be merged, and the last n elements are set to 0 and should be ignored. nums2 has a length of n.
+
+
+class Solution:
+    def merge(self, nums1: List[int], m: int, nums2: List[int], n: int) -> None:
+        i = len(nums1) - 1
+        while m > 0 and n > 0:
+            if nums1[m - 1] >= nums2[n - 1]:
+                nums1[i] = nums1[m - 1]
+                m -= 1
+            else:
+                nums1[i] = nums2[n - 1]
+                n -= 1
+            i -= 1
+            
+        while n > 0:
+            nums1[i] = nums2[n - 1]
+            n -= 1
+            i -= 1
+
+
+---------------------------------------------------------------------------------------------------->
+
+1650. Lowest Common Ancestor of a Binary Tree III
+
+
+Given two nodes of a binary tree p and q, return their lowest common ancestor (LCA).
+
+Each node will have a reference to its parent node. The definition for Node is below:
+
+class Node {
+    public int val;
+    public Node left;
+    public Node right;
+    public Node parent;
+}
+According to the definition of LCA on Wikipedia: "The lowest common ancestor of two nodes p and q in a tree T is the lowest node that has both p and q as descendants (where we allow a node to be a descendant of itself)."
+
+
+"""
+# Definition for a Node.
+class Node:
+    def __init__(self, val):
+        self.val = val
+        self.left = None
+        self.right = None
+        self.parent = None
+"""
+
+class Solution:
+    def lowestCommonAncestor(self, p: 'Node', q: 'Node') -> 'Node':
+        left, right = p, q
+
+        while left != right:
+            left = left.parent if left else q
+            right = right.parent if right else p
+        
+        return left
+
+
+---------------------------------------------------------------------------------------------------->
+
+236. Lowest Common Ancestor of a Binary Tree
+
+
+Given a binary tree, find the lowest common ancestor (LCA) of two given nodes in the tree.
+
+According to the definition of LCA on Wikipedia: “The lowest common ancestor is defined between two nodes p and q as the lowest node in T that has both p and q as descendants (where we allow a node to be a descendant of itself).”
+
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        if root == None or root == p or root == q:
+            return root
+
+        left = self.lowestCommonAncestor(root.left, p, q)
+        right = self.lowestCommonAncestor(root.right, p, q)
+
+        if left and right:
+            return root
+
+        return left or right
+
+
+---------------------------------------------------------------------------------------------------->
+
+339. Nested List Weight Sum
+
+
+You are given a nested list of integers nestedList. Each element is either an integer or a list whose elements may also be integers or other lists.
+
+The depth of an integer is the number of lists that it is inside of. For example, the nested list [1,[2,2],[[3],2],1] has each integer's value set to its depth.
+
+Return the sum of each integer in nestedList multiplied by its depth.
+
+
+# """
+# This is the interface that allows for creating nested lists.
+# You should not implement it, or speculate about its implementation
+# """
+#class NestedInteger:
+#    def __init__(self, value=None):
+#        """
+#        If value is not specified, initializes an empty list.
+#        Otherwise initializes a single integer equal to value.
+#        """
+#
+#    def isInteger(self):
+#        """
+#        @return True if this NestedInteger holds a single integer, rather than a nested list.
+#        :rtype bool
+#        """
+#
+#    def add(self, elem):
+#        """
+#        Set this NestedInteger to hold a nested list and adds a nested integer elem to it.
+#        :rtype void
+#        """
+#
+#    def setInteger(self, value):
+#        """
+#        Set this NestedInteger to hold a single integer equal to value.
+#        :rtype void
+#        """
+#
+#    def getInteger(self):
+#        """
+#        @return the single integer that this NestedInteger holds, if it holds a single integer
+#        The result is undefined if this NestedInteger holds a nested list
+#        :rtype int
+#        """
+#
+#    def getList(self):
+#        """
+#        @return the nested list that this NestedInteger holds, if it holds a nested list
+#        The result is undefined if this NestedInteger holds a single integer
+#        :rtype List[NestedInteger]
+#        """
+
+class Solution:
+    def rec_dfs(self, nestedList: List[NestedInteger], level: int) -> int:
+        result = 0
+        for x in nestedList:
+            if x.isInteger():
+                result += x.getInteger() * level
+            else:
+                result += self.rec_dfs(x.getList(), level + 1)
+        return result
+
+    def depthSum(self, nestedList: List[NestedInteger]) -> int:
+        return self.rec_dfs(nestedList, 1)
+
+
+---------------------------------------------------------------------------------------------------->
+
+56. Merge Intervals
+
+
+Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.
+
+
+class Solution:
+    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
+        if not intervals:
+            return []
+        
+        intervals.sort()
+        result = []
+        for x in intervals:
+            if not result or result[-1][1] < x[0]:
+                result.append(x)
+            else:
+                result[-1][1] = max(result[-1][1], x[1])
+
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+1091. Shortest Path in Binary Matrix
+
+
+Given an n x n binary matrix grid, return the length of the shortest clear path in the matrix. If there is no clear path, return -1.
+
+A clear path in a binary matrix is a path from the top-left cell (i.e., (0, 0)) to the bottom-right cell (i.e., (n - 1, n - 1)) such that:
+
+All the visited cells of the path are 0.
+All the adjacent cells of the path are 8-directionally connected (i.e., they are different and they share an edge or a corner).
+The length of a clear path is the number of visited cells of this path.
+
+
+class Solution:
+    def shortestPathBinaryMatrix(self, grid: List[List[int]]) -> int:
+        if not grid or grid[0][0] == 1 or grid[-1][-1] == 1:
+            return -1
+            
+        n = len(grid)
+
+        directions = {(1, -1), (1, 0), (1, 1), (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1)}
+        queue = deque([(0, 0, 1)])
+
+        while queue:
+            x, y, length = queue.popleft()
+            if x == n - 1 and y == n - 1:
+                return length
+
+            for direction in directions:
+                row, col = x + direction[0], y + direction[1]
+                if 0 <= row < n and 0 <= col < n and grid[row][col] == 0:
+                    grid[row][col] = 1
+                    queue.append((row, col, length + 1))
+        
+        return -1
+
+
+---------------------------------------------------------------------------------------------------->
+
+528. Random Pick with Weight
+
+
+You are given a 0-indexed array of positive integers w where w[i] describes the weight of the ith index.
+
+You need to implement the function pickIndex(), which randomly picks an index in the range [0, w.length - 1] (inclusive) and returns it. The probability of picking an index i is w[i] / sum(w).
+
+For example, if w = [1, 3], the probability of picking index 0 is 1 / (1 + 3) = 0.25 (i.e., 25%), and the probability of picking index 1 is 3 / (1 + 3) = 0.75 (i.e., 75%).
+
+
+class Solution:
+
+    def __init__(self, w: List[int]):
+        self.prefix_sums = []
+        self.prefix_sum = 0
+        for x in w:
+            self.prefix_sum += x
+            self.prefix_sums.append(self.prefix_sum)
+
+    def pickIndex(self) -> int:
+        target = random.randint(1, self.prefix_sum)
+        i, j = 0, len(self.prefix_sums) - 1
+        while i < j:
+            mid = (i + j) // 2
+            if self.prefix_sums[mid] < target:
+                i = mid + 1
+            else:
+                j = mid
+        
+        return i
+
+
+---------------------------------------------------------------------------------------------------->
+
+146. LRU Cache
+
+
+Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.
+
+Implement the LRUCache class:
+
+LRUCache(int capacity) Initialize the LRU cache with positive size capacity.
+int get(int key) Return the value of the key if the key exists, otherwise return -1.
+void put(int key, int value) Update the value of the key if the key exists. Otherwise, add the key-value pair to the cache. If the number of keys exceeds the capacity from this operation, evict the least recently used key.
+The functions get and put must each run in O(1) average time complexity.
+
+
+class Node:
+    def __init__(self, key: int, val: int):
+        self.key = key
+        self.val = val
+        self.next = None
+        self.prev = None
+
+class LRUCache:
+
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.cache = {}
+        self.list_head = Node(0, 0)
+        self.list_tail = Node(0, 0)
+        self.list_head.next = self.list_tail
+        self.list_tail.prev = self.list_head
+
+    
+    def remove_node(self, node: 'Node') -> None:
+            node.prev.next = node.next
+            node.next.prev = node.prev
+
+    def insert(self, node: 'Node') -> None:
+            node.prev = self.list_tail.prev
+            node.next = self.list_tail
+            self.list_tail.prev.next = node
+            self.list_tail.prev = node            
+
+    def get(self, key: int) -> int:
+        if key not in self.cache:
+            return -1
+
+        node = self.cache[key]
+        self.remove_node(node)
+        self.insert(node)
+
+        return node.val
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.cache:
+            self.remove_node(self.cache[key])
+
+        node = Node(key, value)
+        self.insert(node)
+        self.cache[key] = node
+
+        if len(self.cache) > self.capacity:
+            del self.cache[self.list_head.next.key]
+            self.remove_node(self.list_head.next)
+
+
+---------------------------------------------------------------------------------------------------->
+
+347. Top K Frequent Elements
+
+
+Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.
+
+
+class Solution:
+    def topKFrequent(self, nums: List[int], k: int) -> List[int]:
+        heap, num_frequency_map = [], Counter(nums)
+        for key, value in num_frequency_map.items():
+            heapq.heappush(heap, (value, key))
+            if len(heap) > k:
+                heapq.heappop(heap)
+        
+        return [x for _, x in heap]
+
+
+---------------------------------------------------------------------------------------------------->
+
+1. Two Sum
+
+
+Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
+
+You can return the answer in any order.
+
+
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        num_to_pos = {}
+        for i, x in enumerate(nums):
+            num_to_pos[x] = i
+
+        for j, y in enumerate(nums):
+            if target - y in num_to_pos:
+                if num_to_pos[target - y] != j:
+                    return [num_to_pos[target - y], j]
+        
+        return []
+
+
+---------------------------------------------------------------------------------------------------->
+
+346. Moving Average from Data Stream
+
+
+Given a stream of integers and a window size, calculate the moving average of all integers in the sliding window.
+
+Implement the MovingAverage class:
+
+MovingAverage(int size) Initializes the object with the size of the window size.
+double next(int val) Returns the moving average of the last size values of the stream.
+
+
+class MovingAverage:
+    
+    def __init__(self, size: int):
+        self.size = size
+        self.numbers = deque()
+        self.sum = 0
+
+    def next(self, val: int) -> float:
+        self.numbers.append(val)
+        self.sum += val
+        if len(self.numbers) > self.size:
+            self.sum -= self.numbers.popleft()
+
+        return self.sum / len(self.numbers)
+
+
+---------------------------------------------------------------------------------------------------->
+
+129. Sum Root to Leaf Numbers
+
+
+You are given the root of a binary tree containing digits from 0 to 9 only.
+
+Each root-to-leaf path in the tree represents a number.
+
+For example, the root-to-leaf path 1 -> 2 -> 3 represents the number 123.
+Return the total sum of all root-to-leaf numbers. Test cases are generated so that the answer will fit in a 32-bit integer.
+
+A leaf node is a node with no children.
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def dfs(self, node: 'TreeNode', current_value: int) -> int:
+        new_value = current_value * 10 + node.val
+        if not node.left and not node.right:
+            return new_value
+                
+        left = self.dfs(node.left, new_value) if node.left else 0
+        right = self.dfs(node.right, new_value) if node.right else 0
+        
+        return left + right
+
+    def sumNumbers(self, root: Optional[TreeNode]) -> int:
+        return self.dfs(root, 0)   
+
+
+---------------------------------------------------------------------------------------------------->
+
+138. Copy List with Random Pointer
+
+
+A linked list of length n is given such that each node contains an additional random pointer, which could point to any node in the list, or null.
+
+Construct a deep copy of the list. The deep copy should consist of exactly n brand new nodes, where each new node has its value set to the value of its corresponding original node. Both the next and random pointer of the new nodes should point to new nodes in the copied list such that the pointers in the original list and copied list represent the same list state. None of the pointers in the new list should point to nodes in the original list.
+
+For example, if there are two nodes X and Y in the original list, where X.random --> Y, then for the corresponding two nodes x and y in the copied list, x.random --> y.
+
+Return the head of the copied linked list.
+
+The linked list is represented in the input/output as a list of n nodes. Each node is represented as a pair of [val, random_index] where:
+
+val: an integer representing Node.val
+random_index: the index of the node (range from 0 to n-1) that the random pointer points to, or null if it does not point to any node.
+Your code will only be given the head of the original linked list.
+
+
+"""
+# Definition for a Node.
+class Node:
+    def __init__(self, x: int, next: 'Node' = None, random: 'Node' = None):
+        self.val = int(x)
+        self.next = next
+        self.random = random
+"""
+
+class Solution:
+    def copyRandomList(self, head: 'Optional[Node]') -> 'Optional[Node]':
+        if not head:
+            return None
+        
+        copy_head = Node(head.val)
+        node_map = {None: None, head: copy_head}
+
+        node, copy_node = head, copy_head
+        while node.next:
+            copy_node.next = Node(node.next.val)
+            node_map[node.next] = copy_node.next      
+            node = node.next
+            copy_node = copy_node.next      
+            
+
+        node, copy_node = head, copy_head
+        while node:
+            copy_node.random = node_map[node.random]
+            node = node.next
+            copy_node = copy_node.next
+
+        return copy_head
+
+
+---------------------------------------------------------------------------------------------------->
+
+973. K Closest Points to Origin
+
+
+Given an array of points where points[i] = [xi, yi] represents a point on the X-Y plane and an integer k, return the k closest points to the origin (0, 0).
+
+The distance between two points on the X-Y plane is the Euclidean distance (i.e., √(x1 - x2)2 + (y1 - y2)2).
+
+You may return the answer in any order. The answer is guaranteed to be unique (except for the order that it is in).
+
+
+class Solution:
+    def distance(self, point: List[int]) -> float:
+        return -math.sqrt(point[0]**2 + point[1]**2)
+
+    def kClosest(self, points: List[List[int]], k: int) -> List[List[int]]:
+        heap = []
+        for x in points:
+            heapq.heappush(heap, (self.distance(x), x))
+            if len(heap) > k:
+                heapq.heappop(heap)
+        return [x for _, x in heap]
+
+
+---------------------------------------------------------------------------------------------------->
+
+121. Best Time to Buy and Sell Stock
+
+
+You are given an array prices where prices[i] is the price of a given stock on the ith day.
+
+You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.
+
+Return the maximum profit you can achieve from this transaction. If you cannot achieve any profit, return 0.
+
+
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        if not prices:
+            return 0
+
+        buy, profit = prices[0], 0
+        for price in prices:
+            buy = min(buy, price)
+            profit = max(profit, price - buy)
+        return profit
+
+
+---------------------------------------------------------------------------------------------------->
+
+1570. Dot Product of Two Sparse Vectors
+
+
+Given two sparse vectors, compute their dot product.
+
+Implement class SparseVector:
+
+SparseVector(nums) Initializes the object with the vector nums
+dotProduct(vec) Compute the dot product between the instance of SparseVector and vec
+A sparse vector is a vector that has mostly zero values, you should store the sparse vector efficiently and compute the dot product between two SparseVector.
+
+Follow up: What if only one of the vectors is sparse?
+
+
+class SparseVector:
+    def __init__(self, nums: List[int]):
+        self.position_value_map = {}
+        for i, n in enumerate(nums):
+            if n != 0:
+                self.position_value_map[i] = n
+        
+    # Return the dotProduct of two sparse vectors
+    def dotProduct(self, vec: 'SparseVector') -> int:
+        prod = 0
+        for i, n in vec.position_value_map.items():
+            if i in self.position_value_map:
+                prod += self.position_value_map[i] * n
+        
+        return prod
+        
+
+# Your SparseVector object will be instantiated and called as such:
+# v1 = SparseVector(nums1)
+# v2 = SparseVector(nums2)
+# ans = v1.dotProduct(v2)
+
+
+---------------------------------------------------------------------------------------------------->
+
+23. Merge k Sorted Lists
+
+
+You are given an array of k linked-lists lists, each linked-list is sorted in ascending order.
+
+Merge all the linked-lists into one sorted linked-list and return it.
+
+
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def merge(self, left: Optional[ListNode], right: Optional[ListNode]) -> Optional[ListNode]:
+        current = dummy = ListNode(0)
+        while left and right:
+            if left.val <= right.val:
+                current.next = left
+                left = left.next
+            else:
+                current.next = right
+                right = right.next
+            
+            current = current.next
+        
+        current.next = left or right
+        return dummy.next
+
+    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
+        k = len(lists)
+        if k == 0:
+            return None
+        if k == 1:
+            return lists[0]
+
+        mid = k // 2
+        left = self.mergeKLists(lists[:mid])
+        right = self.mergeKLists(lists[mid:])
+
+        return self.merge(left, right)
+
+
+---------------------------------------------------------------------------------------------------->
+
+34. Find First and Last Position of Element in Sorted Array
+
+
+Given an array of integers nums sorted in non-decreasing order, find the starting and ending position of a given target value.
+
+If target is not found in the array, return [-1, -1].
+
+You must write an algorithm with O(log n) runtime complexity.
+
+
+class Solution:
+    def searchRange(self, nums: List[int], target: int) -> List[int]:
+        first, last = -1, -1
+
+        left, right = 0, len(nums) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if nums[mid] == target:
+                first = mid
+            if target <= nums[mid]:
+                right = mid - 1
+            else:
+                left = mid + 1
+
+        left, right = 0, len(nums) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if nums[mid] == target:
+                last = mid
+            if target < nums[mid]:
+                right = mid - 1
+            else:
+                left = mid + 1
+
+        return [first, last]
+
+
+---------------------------------------------------------------------------------------------------->
+
+1539. Kth Missing Positive Number
+
+
+Given an array arr of positive integers sorted in a strictly increasing order, and an integer k.
+
+Return the kth positive integer that is missing from this array.
+
+class Solution:
+    def findKthPositive(self, arr: List[int], k: int) -> int:
+
+// TODO
+
+
+---------------------------------------------------------------------------------------------------->
+
+162. Find Peak Element
+
+
+A peak element is an element that is strictly greater than its neighbors.
+
+Given a 0-indexed integer array nums, find a peak element, and return its index. If the array contains multiple peaks, return the index to any of the peaks.
+
+You may imagine that nums[-1] = nums[n] = -∞. In other words, an element is always considered to be strictly greater than a neighbor that is outside the array.
+
+You must write an algorithm that runs in O(log n) time.
+
+
+class Solution:
+    def findPeakElement(self, nums: List[int]) -> int:
+        left, right = 0, len(nums) - 1
+        
+        while left < right:
+            mid = (left + right) // 2        
+            if nums[mid] < nums[mid + 1]:
+                left = mid + 1
+            else:
+                right = mid
+        
+        return left
+
+
+---------------------------------------------------------------------------------------------------->
+
+31. Next Permutation
+
+
+A permutation of an array of integers is an arrangement of its members into a sequence or linear order.
+
+For example, for arr = [1,2,3], the following are all the permutations of arr: [1,2,3], [1,3,2], [2, 1, 3], [2, 3, 1], [3,1,2], [3,2,1].
+The next permutation of an array of integers is the next lexicographically greater permutation of its integer. More formally, if all the permutations of the array are sorted in one container according to their lexicographical order, then the next permutation of that array is the permutation that follows it in the sorted container. If such arrangement is not possible, the array must be rearranged as the lowest possible order (i.e., sorted in ascending order).
+
+For example, the next permutation of arr = [1,2,3] is [1,3,2].
+Similarly, the next permutation of arr = [2,3,1] is [3,1,2].
+While the next permutation of arr = [3,2,1] is [1,2,3] because [3,2,1] does not have a lexicographical larger rearrangement.
+Given an array of integers nums, find the next permutation of nums.
+
+The replacement must be in place and use only constant extra memory.
+
+
+class Solution:
+    def nextPermutation(self, nums: List[int]) -> None:
+        n = len(nums)
+        if n <= 1:
+            return nums
+
+        i = n - 2
+        while i >= 0 and nums[i] >= nums[i + 1]:
+            i -= 1
+        
+        if i < 0:
+            nums.reverse()
+            return
+
+        j = n - 1
+        while nums[j] <= nums[i]:
+            j -= 1
+
+        nums[i], nums[j] = nums[j], nums[i]
+        left, right = i + 1, n - 1
+        while left < right:
+            nums[left], nums[right] = nums[right], nums[left]
+            left += 1
+            right -= 1
+        return left
+
+
+---------------------------------------------------------------------------------------------------->
+
+71. Simplify Path
+
+
+You are given an absolute path for a Unix-style file system, which always begins with a slash '/'. Your task is to transform this absolute path into its simplified canonical path.
+
+The rules of a Unix-style file system are as follows:
+
+A single period '.' represents the current directory.
+A double period '..' represents the previous/parent directory.
+Multiple consecutive slashes such as '//' and '///' are treated as a single slash '/'.
+Any sequence of periods that does not match the rules above should be treated as a valid directory or file name. For example, '...' and '....' are valid directory or file names.
+The simplified canonical path should follow these rules:
+
+The path must start with a single slash '/'.
+Directories within the path must be separated by exactly one slash '/'.
+The path must not end with a slash '/', unless it is the root directory.
+The path must not have any single or double periods ('.' and '..') used to denote current or parent directories.
+Return the simplified canonical path.
+
+
+class Solution:
+    def simplifyPath(self, path: str) -> str:
+        stack = deque()
+        for d in path.split("/"):
+            if d == "..":
+                if stack:
+                    stack.pop()
+            elif d and d != ".":
+                stack.append(d)
+        
+        return "/" + "/".join(stack)
+
+
+---------------------------------------------------------------------------------------------------->
+
+863. All Nodes Distance K in Binary Tree
+
+
+Given the root of a binary tree, the value of a target node target, and an integer k, return an array of the values of all nodes that have a distance k from the target node.
+
+You can return the answer in any order.
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def distanceK(self, root: TreeNode, target: TreeNode, k: int) -> List[int]:
+
+// TODO
+
+
+---------------------------------------------------------------------------------------------------->
+
+938. Range Sum of BST
+
+
+Given the root node of a binary search tree and two integers low and high, return the sum of values of all nodes with a value in the inclusive range [low, high].
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def rangeSumBST(self, root: Optional[TreeNode], low: int, high: int) -> int:
+        if not root:
+            return 0
+
+        left = self.rangeSumBST(root.left, low, high) if root.val > low else 0
+        right = self.rangeSumBST(root.right, low, high) if root.val < high else 0
+
+        return left + right + (root.val if low <= root.val <= high else 0)
+
+
+---------------------------------------------------------------------------------------------------->
+
+76. Minimum Window Substring
+
+
+Given two strings s and t of lengths m and n respectively, return the minimum window substring of s such that every character in t (including duplicates) is included in the window. If there is no such substring, return the empty string "".
+
+The testcases will be generated such that the answer is unique.
+
+
+class Solution:
+    def minWindow(self, s: str, t: str) -> str:
+
+//TODO
+
+
+---------------------------------------------------------------------------------------------------->
+
+133. Clone Graph
+
+
+Given a reference of a node in a connected undirected graph.
+
+Return a deep copy (clone) of the graph.
+
+Each node in the graph contains a value (int) and a list (List[Node]) of its neighbors.
+
+class Node {
+    public int val;
+    public List<Node> neighbors;
+}
+ 
+
+Test case format:
+
+For simplicity, each node's value is the same as the node's index (1-indexed). For example, the first node with val == 1, the second node with val == 2, and so on. The graph is represented in the test case using an adjacency list.
+
+An adjacency list is a collection of unordered lists used to represent a finite graph. Each list describes the set of neighbors of a node in the graph.
+
+The given node will always be the first node with val = 1. You must return the copy of the given node as a reference to the cloned graph.
+
+
+"""
+# Definition for a Node.
+class Node:
+    def __init__(self, val = 0, neighbors = None):
+        self.val = val
+        self.neighbors = neighbors if neighbors is not None else []
+"""
+
+from typing import Optional
+class Solution:
+    def cloneGraph(self, node: Optional['Node']) -> Optional['Node']:
+        if not node:
+            return None
+
+        cloned = {node: Node(node.val)}
+        queue = deque([node])
+
+        while queue:
+            curr = queue.popleft()
+            for neighbor in curr.neighbors:
+                if neighbor not in cloned:
+                    cloned[neighbor] = Node(neighbor.val)
+                    queue.append(neighbor)
+                cloned[curr].neighbors.append(cloned[neighbor])
+
+        return cloned[node]
+
+
+---------------------------------------------------------------------------------------------------->
+
+249. Group Shifted Strings
+
+
+Perform the following shift operations on a string:
+
+Right shift: Replace every letter with the successive letter of the English alphabet, where 'z' is replaced by 'a'. For example, "abc" can be right-shifted to "bcd" or "xyz" can be right-shifted to "yza".
+Left shift: Replace every letter with the preceding letter of the English alphabet, where 'a' is replaced by 'z'. For example, "bcd" can be left-shifted to "abc" or "yza" can be left-shifted to "xyz".
+We can keep shifting the string in both directions to form an endless shifting sequence.
+
+For example, shift "abc" to form the sequence: ... <-> "abc" <-> "bcd" <-> ... <-> "xyz" <-> "yza" <-> .... <-> "zab" <-> "abc" <-> ...
+You are given an array of strings strings, group together all strings[i] that belong to the same shifting sequence. You may return the answer in any order.
+
+
+class Solution:
+    def groupStrings(self, strings: List[str]) -> List[List[str]]:
+
+// TODO
+
+
+---------------------------------------------------------------------------------------------------->
+
+791. Custom Sort String
+
+
+You are given two strings order and s. All the characters of order are unique and were sorted in some custom order previously.
+
+Permute the characters of s so that they match the order that order was sorted. More specifically, if a character x occurs before a character y in order, then x should occur before y in the permuted string.
+
+Return any permutation of s that satisfies this property.
+
+
+class Solution:
+    def customSortString(self, order: str, s: str) -> str:
+        char_to_occurence = {}
+        for c in s:
+            char_to_occurence[c] = char_to_occurence.get(c, 0) + 1
+
+        result = []
+        for c in order:
+            if c in char_to_occurence:
+                result.append(char_to_occurence[c] * c)
+                del char_to_occurence[c]
+        
+        for c, v in char_to_occurence.items():
+            result.append(v * c)
+
+        return "".join(result)         
+
+
+---------------------------------------------------------------------------------------------------->
+
+921. Minimum Add to Make Parentheses Valid
+
+
+A parentheses string is valid if and only if:
+
+It is the empty string,
+It can be written as AB (A concatenated with B), where A and B are valid strings, or
+It can be written as (A), where A is a valid string.
+You are given a parentheses string s. In one move, you can insert a parenthesis at any position of the string.
+
+For example, if s = "()))", you can insert an opening parenthesis to be "(()))" or a closing parenthesis to be "())))".
+Return the minimum number of moves required to make s valid.
+
+
+class Solution:
+    def minAddToMakeValid(self, s: str) -> int:
+        open_count, close_count = 0, 0
+        
+        for c in s:
+            if c == "(":
+                open_count += 1
+            elif c == ")":
+                if open_count <= 0:
+                    close_count += 1
+                else:
+                    open_count -= 1
+
+        return open_count + close_count
+
+
+---------------------------------------------------------------------------------------------------->
+
+523. Continuous Subarray Sum
+
+
+Given an integer array nums and an integer k, return true if nums has a good subarray or false otherwise.
+
+A good subarray is a subarray where:
+
+its length is at least two, and
+the sum of the elements of the subarray is a multiple of k.
+Note that:
+
+A subarray is a contiguous part of the array.
+An integer x is a multiple of k if there exists an integer n such that x = n * k. 0 is always a multiple of k.
+
+
+class Solution:
+    def checkSubarraySum(self, nums: List[int], k: int) -> bool:
+        mod_to_index = {0: -1}
+        prefix_sum = 0
+
+        for i, x in enumerate(nums):
+            prefix_sum += x
+            mod = prefix_sum % k if k != 0 else prefix_sum
+
+            if mod in mod_to_index:
+                if i - mod_to_index[mod] > 1:
+                    return True
+            else:
+                mod_to_index[mod] = i
+        
+        return False
+
+
+---------------------------------------------------------------------------------------------------->
+
+1004. Max Consecutive Ones III
+
+
+Given a binary array nums and an integer k, return the maximum number of consecutive 1's in the array if you can flip at most k 0's.
+
+
+class Solution:
+    def longestOnes(self, nums: List[int], k: int) -> int:
+        zero_counter = 0
+        max_length = 0
+        i, j = 0, 0
+        while j < len(nums):       
+            if nums[j] == 0:
+                zero_counter += 1
+            while zero_counter > k:
+                if nums[i] == 0:
+                    zero_counter -= 1
+                i += 1
+
+            max_length = max(max_length, j - i + 1)
+            j += 1
+            
+        return max_length
+
+
+---------------------------------------------------------------------------------------------------->
+
+986. Interval List Intersections
+
+
+You are given two lists of closed intervals, firstList and secondList, where firstList[i] = [starti, endi] and secondList[j] = [startj, endj]. Each list of intervals is pairwise disjoint and in sorted order.
+
+Return the intersection of these two interval lists.
+
+A closed interval [a, b] (with a <= b) denotes the set of real numbers x with a <= x <= b.
+
+The intersection of two closed intervals is a set of real numbers that are either empty or represented as a closed interval. For example, the intersection of [1, 3] and [2, 4] is [2, 3].
+
+
+class Solution:
+    def intervalIntersection(self, firstList: List[List[int]], secondList: List[List[int]]) -> List[List[int]]:
+        result = []
+        i, j = 0, 0
+
+        while i < len(firstList) and j < len(secondList):
+            intersection = [max(firstList[i][0], secondList[j][0]), min(firstList[i][1], secondList[j][1])]
+            if intersection[0] <= intersection[1]:
+                result.append(intersection)
+            
+            if firstList[i][1] <= secondList[j][1]:
+                i += 1
+            else:
+                j += 1
+        
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+987. Vertical Order Traversal of a Binary Tree
+
+
+Given the root of a binary tree, calculate the vertical order traversal of the binary tree.
+
+For each node at position (row, col), its left and right children will be at positions (row + 1, col - 1) and (row + 1, col + 1) respectively. The root of the tree is at (0, 0).
+
+The vertical order traversal of a binary tree is a list of top-to-bottom orderings for each column index starting from the leftmost column and ending on the rightmost column. There may be multiple nodes in the same row and same column. In such a case, sort these nodes by their values.
+
+Return the vertical order traversal of the binary tree.
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def verticalTraversal(self, root: Optional[TreeNode]) -> List[List[int]]:
+        if not root:
+            return []
+        
+        col_to_nodes = defaultdict(list)
+        queue = deque([(root, 0, 0)])
+
+        while queue:
+            node, level, col = queue.popleft()
+            col_to_nodes[col].append((level, node.val))
+
+            if node.left:
+                queue.append((node.left, level + 1, col - 1))
+            if node.right:
+                queue.append((node.right, level + 1, col + 1))
+
+        result = []
+        for key in sorted(col_to_nodes.keys()):
+            sorted_list = sorted(col_to_nodes[key], key=lambda x: (x[0], x[1]))
+            result.append([val for _, val in sorted_list])
+
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+20. Valid Parentheses
+
+
+Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.
+
+An input string is valid if:
+
+Open brackets must be closed by the same type of brackets.
+Open brackets must be closed in the correct order.
+Every close bracket has a corresponding open bracket of the same type.
+
+
+class Solution:
+    def isValid(self, s: str) -> bool:
+        stack = deque()
+        pairs = {")": "(", "]": "[", "}": "{"}
+        
+        for c in s:
+            if c in "({[":
+                stack.append(c)
+            elif not stack or stack.pop() != pairs[c]:
+                return False
+
+        return not stack
+
+
+---------------------------------------------------------------------------------------------------->
+
+498. Diagonal Traverse
+
+
+Given an m x n matrix mat, return an array of all the elements of the array in a diagonal order.
+
+
+class Solution:
+    def findDiagonalOrder(self, mat: List[List[int]]) -> List[int]:
+        if not mat or not mat[0]:
+            return []
+        
+        n, m = len(mat), len(mat[0])
+
+        diagonals = defaultdict(list)
+        for i in range(n):
+            for j in range(m):
+                diagonals[i + j].append(mat[i][j])
+
+        result = []
+        for d in range(m + n - 1):
+            if d % 2 == 0:
+                result.extend(reversed(diagonals[d]))
+            else: 
+                result.extend(diagonals[d])
+
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+670. Maximum Swap
+
+
+You are given an integer num. You can swap two digits at most once to get the maximum valued number.
+
+Return the maximum valued number you can get.
+
+
+class Solution:
+    def maximumSwap(self, num: int) -> int:
+        nums = list(str(num))
+
+        right_most_occurance = {}
+        for i, x in enumerate(nums):
+            right_most_occurance[x] = i
+
+        for i, x in enumerate(nums):
+            for a in range(9, int(x), -1):
+                key = str(a)
+                if key in right_most_occurance and right_most_occurance[key] > i:
+                    nums[i], nums[right_most_occurance[key]] = nums[right_most_occurance[key]], nums[i]
+                    return int("".join(nums))
+
+        return int("".join(nums))
+
+
+---------------------------------------------------------------------------------------------------->
+
+708. Insert into a Sorted Circular Linked List
+
+
+Given a Circular Linked List node, which is sorted in non-descending order, write a function to insert a value insertVal into the list such that it remains a sorted circular list. The given node can be a reference to any single node in the list and may not necessarily be the smallest value in the circular list.
+
+If there are multiple suitable places for insertion, you may choose any place to insert the new value. After the insertion, the circular list should remain sorted.
+
+If the list is empty (i.e., the given node is null), you should create a new single circular list and return the reference to that single node. Otherwise, you should return the originally given node.
+
+
+"""
+# Definition for a Node.
+class Node:
+    def __init__(self, val=None, next=None):
+        self.val = val
+        self.next = next
+"""
+
+class Solution:
+    def insert(self, head: 'Optional[Node]', insertVal: int) -> 'Node':
+        if not head:
+            node = Node(insertVal)
+            node.next = node
+            return node
+
+        node = head
+        while True:
+            if node.val <= insertVal <= node.next.val:
+                break
+            if node.val > node.next.val:
+                if insertVal <= node.next.val or node.val <= insertVal:
+                    break
+
+            node = node.next
+            if node == head:
+                break
+
+        new_node = Node(insertVal, node.next)
+        node.next = new_node
+
+        return head
+
+
+---------------------------------------------------------------------------------------------------->
+
+282. Expression Add Operators
+
+
+Given a string num that contains only digits and an integer target, return all possibilities to insert the binary operators '+', '-', and/or '*' between the digits of num so that the resultant expression evaluates to the target value.
+
+Note that operands in the returned expressions should not contain leading zeros.
+
+
+class Solution:
+    def backtracking(self, num: str, target: int, exp: str, pos: int, exp_res: int, last_val: int, result: List[str]):
+        if pos == len(num):
+            if exp_res == target:
+                result.append(exp)
+            return
+
+        for i in range(pos, len(num)):
+            digit = num[pos:i + 1]
+            x = int(digit)
+
+            if len(digit) > 1 and digit[0] == '0':
+                break
+
+            if pos == 0:
+                self.backtracking(num, target, digit, i + 1, x, x, result)
+            else:
+                self.backtracking(num, target, exp + "+" + digit, i + 1, exp_res + x, x, result)
+                self.backtracking(num, target, exp + "-" + digit, i + 1, exp_res - x, -x, result)
+                self.backtracking(num, target, exp + "*" + digit, i + 1, (exp_res - last_val) + (last_val * x), last_val * x, result)
+
+    def addOperators(self, num: str, target: int) -> List[str]:
+        result = []
+        if not num:
+            return result
+        
+        self.backtracking(num, target, "", 0, 0, 0, result)
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+19. Remove Nth Node From End of List
+
+
+Given the head of a linked list, remove the nth node from the end of the list and return its head.
+
+
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        dummy = ListNode(0, head)
+        fast, slow = dummy, dummy
+
+        for _ in range(n):
+            fast = fast.next
+
+        while fast.next:
+            slow = slow.next
+            fast = fast.next
+
+        slow.next = slow.next.next
+
+        return dummy.next
+
+
+---------------------------------------------------------------------------------------------------->
+
+15. 3Sum
+
+
+Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.
+
+Notice that the solution set must not contain duplicate triplets.
+
+
+class Solution:
+    def threeSum(self, nums: List[int]) -> List[List[int]]:
+        nums.sort()
+        result = []
+
+        i = 0
+        while i < len(nums) - 2:
+
+            left, right = i + 1, len(nums) - 1
+            while left < right:
+                x = nums[i] + nums[left] + nums[right]
+                if x == 0:
+                    result.append([nums[i], nums[left], nums[right]])
+                    left += 1
+                    right -= 1
+                    while left < right and nums[left] == nums[left - 1]:
+                        left += 1
+                    while left < right and nums[right] == nums[right + 1]:
+                        right -= 1
+                elif x < 0:
+                    left += 1
+                else:
+                    right -= 1
+
+            while i < len(nums) - 2 and nums[i] == nums[i + 1]:
+                i += 1
+            i += 1
+
+        return result
+
+
+---------------------------------------------------------------------------------------------------->
+
+200. Number of Islands
+
+
+Given an m x n 2D binary grid grid which represents a map of '1's (land) and '0's (water), return the number of islands.
+
+An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are all surrounded by water.
+
+
+class Solution:
+    def explore_island(self, grid: List[List[str]], row: int, col: int, n: int, m: int):
+        if not ( 0 <= row < n and 0 <= col < m ) or grid[row][col] == "0":
+            return
+        
+        grid[row][col] = "0"
+        directions = {(0, 1), (1, 0), (0, -1), (-1, 0)}
+        for direction in directions:
+            self.explore_island(grid, row + direction[0], col + direction[1], n, m)
+
+    def numIslands(self, grid: List[List[str]]) -> int:
+        if not grid:
+            return 0
+
+        n, m = len(grid), len(grid[0])
+        counter = 0
+
+        for i in range(n):
+            for j in range(m):
+                if grid[i][j] == "1":
+                    counter += 1
+                    self.explore_island(grid, i, j, n, m)
+
+        return counter
+
+
+---------------------------------------------------------------------------------------------------->
+
+235. Lowest Common Ancestor of a Binary Search Tree
+
+
+Given a binary search tree (BST), find the lowest common ancestor (LCA) node of two given nodes in the BST.
+
+According to the definition of LCA on Wikipedia: “The lowest common ancestor is defined between two nodes p and q as the lowest node in T that has both p and q as descendants (where we allow a node to be a descendant of itself).”
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.left = None
+#         self.right = None
+
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        while root:
+            if p.val < root.val and q.val < root.val:
+                root = root.left
+            elif p.val > root.val and q.val > root.val:
+                root = root.right
+            else:
+                return root
+
+
+---------------------------------------------------------------------------------------------------->
+
+26. Remove Duplicates from Sorted Array
+
+
+Given an integer array nums sorted in non-decreasing order, remove the duplicates in-place such that each unique element appears only once. The relative order of the elements should be kept the same. Then return the number of unique elements in nums.
+
+Consider the number of unique elements of nums to be k, to get accepted, you need to do the following things:
+
+Change the array nums such that the first k elements of nums contain the unique elements in the order they were present in nums initially. The remaining elements of nums are not important as well as the size of nums.
+Return k.
+
+
+class Solution:
+    def removeDuplicates(self, nums: List[int]) -> int:
+        if len(nums) <= 1:
+            return len(nums)
+
+        i, j = 0, 1
+        while j < len(nums):
+            if nums[j] != nums[i]:
+                i += 1
+                nums[i] = nums[j]
+            j += 1
+        return i + 1
+
+
+---------------------------------------------------------------------------------------------------->
+
+2. Add Two Numbers
+
+You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.
+
+You may assume the two numbers do not contain any leading zero, except the number 0 itself.
+
+
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        head, tail = None, None
+        carry = 0
+
+        while l1 or l2 or carry:
+            a = l1.val if l1 else 0
+            b = l2.val if l2 else 0
+            
+            total = a + b + carry
+            new = ListNode(total % 10)
+            carry = total // 10
+
+            if not head:
+                head = new
+                tail = new
+            else:
+                tail.next = new
+                tail = tail.next
+
+            l1 = l1.next if l1 else None
+            l2 = l2.next if l2 else None
+
+        return head
+
+
+---------------------------------------------------------------------------------------------------->
+
+101. Symmetric Tree
+
+
+Given the root of a binary tree, check whether it is a mirror of itself (i.e., symmetric around its center).
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def is_mirror(self, left: 'TreeNode', right: 'TreeNode') -> bool:
+        if not left and not right:
+            return True
+
+        if not left or not right or left.val != right.val:
+            return False
+        
+        left_result = self.is_mirror(left.left, right.right)
+        right_result = self.is_mirror(left.right, right.left)
+
+        return left_result and right_result
+
+    def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+        return self.is_mirror(root.left, root.right)
+
+
+---------------------------------------------------------------------------------------------------->
+
+173. Binary Search Tree Iterator
+
+
+Implement the BSTIterator class that represents an iterator over the in-order traversal of a binary search tree (BST):
+
+BSTIterator(TreeNode root) Initializes an object of the BSTIterator class. The root of the BST is given as part of the constructor. The pointer should be initialized to a non-existent number smaller than any element in the BST.
+boolean hasNext() Returns true if there exists a number in the traversal to the right of the pointer, otherwise returns false.
+int next() Moves the pointer to the right, then returns the number at the pointer.
+Notice that by initializing the pointer to a non-existent smallest number, the first call to next() will return the smallest element in the BST.
+
+You may assume that next() calls will always be valid. That is, there will be at least a next number in the in-order traversal when next() is called.
+
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class BSTIterator:
+
+    def __init__(self, root: Optional[TreeNode]):
+        self.stack = []
+        self.current = root
+        
+    def next(self) -> int:
+        while self.current:
+            self.stack.append(self.current)
+            self.current = self.current.left
+
+        self.current = self.stack.pop()
+        result = self.current.val
+        self.current = self.current.right
+        return result        
+
+    def hasNext(self) -> bool:
+        return True if self.current or self.stack else False
+
+# Your BSTIterator object will be instantiated and called as such:
+# obj = BSTIterator(root)
+# param_1 = obj.next()
+# param_2 = obj.hasNext()
+
+
+---------------------------------------------------------------------------------------------------->
